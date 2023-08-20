@@ -17,15 +17,23 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFHyperlinkRun;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.XWPFStyle;
+import org.apache.poi.xwpf.usermodel.XWPFStyles;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTBody;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTBookmark;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTColumns;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTDecimalNumber;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTDocument1;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTHyperlink;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTOnOff;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPPrGeneral;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageMar;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTPageSz;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTSectPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTString;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTStyle;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STPageOrientation;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STStyleType;
 
 public class WordDocument {
 
@@ -35,14 +43,25 @@ public class WordDocument {
 
 	public static final String EXTENSION = ".docx";
 
-	private static boolean CONTENT_IN_TWO_COLUMNS = false;
-
 	private static int uniqueBookMarkCounter = 1;
 
 	public static void build() {
 		System.out.println("Word Document of the Bible Book Introduction Creation started");
 
 		XWPFDocument document = new XWPFDocument();
+		addCustomHeadingStyle(document, "Heading 1", 1);
+		addCustomHeadingStyle(document, "Heading 2", 2);
+		addCustomHeadingStyle(document, "Heading 3", 3);
+		addCustomHeadingStyle(document, "Heading 4", 4);
+		addCustomHeadingStyle(document, "Heading 5", 5);
+		addCustomHeadingStyle(document, "Heading 6", 6);
+		addCustomHeadingStyle(document, "Heading 7", 7);
+		
+		//XWPFHeader head = document.createHeader(HeaderFooterType.DEFAULT);
+        //head.createParagraph().createRun().setText("header");
+
+        //XWPFFooter foot = document.createFooter(HeaderFooterType.DEFAULT);
+        //foot.createParagraph().createRun().setText("footer");
 
 		createPageSettings(document);
 		createMetaData(document);
@@ -66,6 +85,42 @@ public class WordDocument {
 
 	}
 
+	private static void addCustomHeadingStyle(XWPFDocument docxDocument, String strStyleId, int headingLevel) {
+
+		CTStyle ctStyle = CTStyle.Factory.newInstance();
+		ctStyle.setStyleId(strStyleId);
+
+		CTString styleName = CTString.Factory.newInstance();
+		styleName.setVal(strStyleId);
+		ctStyle.setName(styleName);
+
+		CTDecimalNumber indentNumber = CTDecimalNumber.Factory.newInstance();
+		indentNumber.setVal(BigInteger.valueOf(headingLevel));
+
+		// lower number > style is more prominent in the formats bar
+		ctStyle.setUiPriority(indentNumber);
+
+		CTOnOff onoffnull = CTOnOff.Factory.newInstance();
+		ctStyle.setUnhideWhenUsed(onoffnull);
+
+		// style shows up in the formats bar
+		ctStyle.setQFormat(onoffnull);
+
+		// style defines a heading of the given level
+		CTPPrGeneral ppr = CTPPrGeneral.Factory.newInstance();
+		ppr.setOutlineLvl(indentNumber);
+		ctStyle.setPPr(ppr);
+
+		XWPFStyle style = new XWPFStyle(ctStyle);
+
+		// is a null op if already defined
+		XWPFStyles styles = docxDocument.createStyles();
+
+		style.setType(STStyleType.PARAGRAPH);
+		styles.addStyle(style);
+
+	}
+
 	private static void createContent(XWPFDocument document) {
 		System.out.println("Content Creation Started...");
 
@@ -80,19 +135,10 @@ public class WordDocument {
 			}
 			String month = file.getName();
 
-			// Display the word as header
+			// Display the first as header
 			paragraph = document.createParagraph();
 			paragraph.setAlignment(ParagraphAlignment.CENTER);
-			// run = paragraph.createRun();
-			// run.setFontFamily(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_HEADER_FONT));
-			// run.setFontSize(getFontSize(Constants.STR_HEADER_FONT_SIZE) + 8);
-			// run.setBold(true);
-			// run.setText(word);
-
-			// Set background color
-			// CTShd cTShd = run.getCTR().addNewRPr().addNewShd();
-			// cTShd.setVal(STShd.CLEAR);
-			// cTShd.setFill("ABABAB");
+			paragraph.setStyle("Heading 1");
 
 			// Create bookmark for the month
 			bookmark = paragraph.getCTP().addNewBookmarkStart();
@@ -106,12 +152,17 @@ public class WordDocument {
 			run.setFontSize(getFontSize(Constants.STR_CONTENT_FONT_SIZE) + 6);
 			run.setBold(true);
 			run.setText(month.replaceAll("-", " ").replaceAll("_", " ").replaceAll("  ", " "));
+			
+			paragraph = document.createParagraph();
+			paragraph.setAlignment(ParagraphAlignment.LEFT);
+			createIndexByDays(paragraph, file);
+			run = paragraph.createRun();
 			run.addBreak(BreakType.PAGE);
 
 			createContentUnderMonth(document, file);
 
 			if (i < files.length) {
-				addSectionBreak(document, NO_OF_COLUMNS_IN_CONTENT_PAGES, true);
+				addSectionBreak(document, NO_OF_COLUMNS_IN_CONTENT_PAGES);
 			}
 		}
 
@@ -125,6 +176,7 @@ public class WordDocument {
 			File day = files[i];
 
 			XWPFParagraph paragraph = document.createParagraph();
+			paragraph.setStyle("Heading 2");
 
 			try {
 				FileInputStream fis = new FileInputStream(day);
@@ -137,7 +189,7 @@ public class WordDocument {
 					line = line.strip();
 					if (!line.equals("")) {
 						if (line.contains("[H1]")) {
-							line = buildH1Description(document, line, paragraph);
+							line = buildH1Description(document, line, paragraph, i);
 							// Create bookmark for the day
 							CTBookmark bookmark = paragraph.getCTP().addNewBookmarkStart();
 							bookmark.setName(getFormattedBookmarkName(line));
@@ -176,10 +228,15 @@ public class WordDocument {
 			paragraph = document.createParagraph();
 		}
 
-		if (CONTENT_IN_TWO_COLUMNS) {
-			paragraph.setAlignment(ParagraphAlignment.BOTH);
-		}
+		// if (CONTENT_IN_TWO_COLUMNS) {
+		paragraph.setAlignment(ParagraphAlignment.BOTH);
+		// }
 		XWPFRun run = paragraph.createRun();
+		run.setFontFamily(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_CONTENT_FONT));
+		run.setFontSize(getFontSize(Constants.STR_CONTENT_FONT_SIZE));
+		run.setText("\t");
+		
+		run = paragraph.createRun();
 		run.setFontFamily(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_CONTENT_FONT));
 		run.setFontSize(getFontSize(Constants.STR_CONTENT_FONT_SIZE));
 		run.setBold(isBold);
@@ -203,7 +260,7 @@ public class WordDocument {
 		// Remove the tag [H3]
 		line = line.replaceAll("\\[H3\\]", "").strip();
 		XWPFParagraph paragraph = document.createParagraph();
-		// paragraph.setStyle("Heading 3");
+		paragraph.setStyle("Heading 4");
 		// paragraph.setAlignment(ParagraphAlignment.CENTER);
 		XWPFRun run = paragraph.createRun();
 		run.setFontFamily(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_CONTENT_FONT));
@@ -216,7 +273,7 @@ public class WordDocument {
 		// Remove the tag [H2]
 		line = line.replaceAll("\\[H2\\]", "").strip();
 		XWPFParagraph paragraph = document.createParagraph();
-		// paragraph.setStyle("Heading 2");
+		paragraph.setStyle("Heading 3");
 		paragraph.setAlignment(ParagraphAlignment.CENTER);
 		XWPFRun run = paragraph.createRun();
 		run.setFontFamily(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_CONTENT_FONT));
@@ -225,7 +282,7 @@ public class WordDocument {
 		run.setText(line);
 	}
 
-	private static String buildH1Description(XWPFDocument document, String line, XWPFParagraph paragraph) {
+	private static String buildH1Description(XWPFDocument document, String line, XWPFParagraph paragraph, int dayOfTheMonth) {
 		// Remove prefix text like 0001 used for identifying unique no of words
 		try {
 			line = line.replace(line.substring(0, line.indexOf("[H1]")), "");
@@ -237,7 +294,7 @@ public class WordDocument {
 		// XWPFParagraph paragraph = document.createParagraph();
 		// Keep the title always in the middle
 		paragraph.setAlignment(ParagraphAlignment.CENTER);
-		// paragraph.setStyle("Heading 1");
+		paragraph.setStyle("Heading 2");
 		// if (CONTENT_IN_TWO_COLUMNS) {
 		// paragraph.setAlignment(ParagraphAlignment.BOTH);
 		// }
@@ -245,7 +302,7 @@ public class WordDocument {
 		run.setFontFamily(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_CONTENT_FONT));
 		run.setFontSize(getFontSize(Constants.STR_CONTENT_FONT_SIZE) + 6);
 		run.setBold(true);
-		run.setText(line);
+		run.setText((dayOfTheMonth + 1) + ". " + line);
 		return line;
 	}
 
@@ -256,14 +313,14 @@ public class WordDocument {
 		paragraph = document.createParagraph();
 		paragraph.setAlignment(ParagraphAlignment.LEFT);
 
-		// Dictionary Details - Label
+		// Book Details - Label
 		run = paragraph.createRun();
 		run.setFontFamily(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_HEADER_FONT));
 		run.setFontSize(getFontSize(Constants.STR_HEADER_FONT_SIZE));
 		run.setBold(true);
 		run.setText(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_DESCRIPTION_TITLE));
 
-		// Dictionary Details - Content
+		// Book Details - Content
 		paragraph = document.createParagraph();
 		paragraph.setAlignment(ParagraphAlignment.LEFT);
 		run = paragraph.createRun();
@@ -272,8 +329,7 @@ public class WordDocument {
 		run.setFontSize(getFontSize(Constants.STR_HEADER_FONT_SIZE));
 		run.setText(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_DESCRIPTION));
 
-		// run.addBreak(BreakType.PAGE);
-		addSectionBreak(document, 1, false);
+		addSectionBreak(document, 1);
 	}
 
 	private static void createPageSettings(XWPFDocument document) {
@@ -287,6 +343,13 @@ public class WordDocument {
 
 		CTSectPr ctSectPr = body.getSectPr();
 
+		setPageSize(ctSectPr);
+		setPageMargin(ctSectPr);
+		
+		System.out.println("Page Setting completed");
+	}
+
+	private static void setPageSize(CTSectPr ctSectPr) {
 		CTPageSz pageSize;
 		if (!ctSectPr.isSetPgSz()) {
 			pageSize = ctSectPr.addNewPgSz();
@@ -357,9 +420,6 @@ public class WordDocument {
 			pageSize.setW(BigInteger.valueOf(Constants.PAGE_A4_W * 20));
 			pageSize.setH(BigInteger.valueOf(Constants.PAGE_A4_H * 20));
 		}
-
-		setPageMargin(ctSectPr);
-		System.out.println("Page Setting completed");
 	}
 
 	private static void createMetaData(XWPFDocument document) {
@@ -438,8 +498,7 @@ public class WordDocument {
 		run.addBreak();
 		run.addBreak();
 
-		// run.addBreak(BreakType.PAGE);
-		addSectionBreak(document, 1, false);
+		addSectionBreak(document, 1);
 	}
 
 	private static void createIndex(XWPFDocument document) {
@@ -452,7 +511,7 @@ public class WordDocument {
 		// Index Page Heading
 		paragraph = document.createParagraph();
 		paragraph.setAlignment(ParagraphAlignment.CENTER);
-		paragraph.setStyle("Heading 1");
+		// paragraph.setStyle("Heading 1");
 		run = paragraph.createRun();
 		run.setFontFamily(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_HEADER_FONT));
 		run.setFontSize(getFontSize(Constants.STR_HEADER_FONT_SIZE));
@@ -480,18 +539,18 @@ public class WordDocument {
 			// String word = file.getName().substring(0, file.getName().lastIndexOf("."));
 			String month = monthDirectory.getName();
 			temp = month.replaceFirst("-", ". ");
-			
+
 			createAnchorLink(paragraph, temp, getFormattedBookmarkName(month), true, "",
 					BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_CONTENT_FONT),
 					getFontSize(Constants.STR_CONTENT_FONT_SIZE));
 		}
 
 		// Index by Days under every Month
-		
+
 		// Index Page Heading
 		paragraph = document.createParagraph();
 		paragraph.setAlignment(ParagraphAlignment.CENTER);
-		paragraph.setStyle("Heading 1");
+		// paragraph.setStyle("Heading 1");
 		run = paragraph.createRun();
 		run.setFontFamily(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_HEADER_FONT));
 		run.setFontSize(getFontSize(Constants.STR_HEADER_FONT_SIZE));
@@ -510,7 +569,7 @@ public class WordDocument {
 			paragraph = document.createParagraph();
 			paragraph.setSpacingAfter(0);
 			temp = month.replaceFirst("-", ". ");
-			
+
 			createAnchorLink(paragraph, temp, getFormattedBookmarkName(month), true, "",
 					BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_CONTENT_FONT),
 					getFontSize(Constants.STR_CONTENT_FONT_SIZE));
@@ -520,8 +579,8 @@ public class WordDocument {
 
 		paragraph = document.createParagraph();
 		run = paragraph.createRun();
-		// run.addBreak(BreakType.PAGE);
-		addSectionBreak(document, NO_OF_COLUMNS_IN_CONTENT_PAGES, true);
+		
+		addSectionBreak(document, NO_OF_COLUMNS_IN_CONTENT_PAGES);
 
 		System.out.println("Index Creation Completed...");
 	}
@@ -537,7 +596,7 @@ public class WordDocument {
 				BibleDailyDevotionCreator.printHelpMessage();
 				return;
 			}
-			createAnchorLink(paragraph, (i+1) + ". " + firstLine, getFormattedBookmarkName(firstLine), true, "\t",
+			createAnchorLink(paragraph, (i + 1) + ". " + firstLine, getFormattedBookmarkName(firstLine), true, "\t",
 					BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_CONTENT_FONT),
 					getFontSize(Constants.STR_CONTENT_FONT_SIZE));
 		}
@@ -595,16 +654,16 @@ public class WordDocument {
 	 * 
 	 * @param document
 	 */
-	private static CTSectPr addSectionBreak(XWPFDocument document, int noOfColumns, boolean setMargin) {
+	private static CTSectPr addSectionBreak(XWPFDocument document, int noOfColumns) {
 		XWPFParagraph paragraph = document.createParagraph();
 		paragraph = document.createParagraph();
+		
 		CTSectPr ctSectPr = paragraph.getCTP().addNewPPr().addNewSectPr();
+		setPageSize(ctSectPr);
+		setPageMargin(ctSectPr);
+		
 		CTColumns ctColumns = ctSectPr.addNewCols();
 		ctColumns.setNum(BigInteger.valueOf(noOfColumns));
-
-		if (setMargin) {
-			setPageMargin(ctSectPr);
-		}
 		return ctSectPr;
 	}
 
