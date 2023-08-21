@@ -47,7 +47,7 @@ public class WordDocument {
 	public static final String EXTENSION = ".docx";
 
 	private static int uniqueBookMarkCounter = 1;
-	
+
 	private static Map<String, File> daysMap = new TreeMap<String, File>();
 
 	public static void build() {
@@ -61,15 +61,16 @@ public class WordDocument {
 		addCustomHeadingStyle(document, "Heading 5", 5);
 		addCustomHeadingStyle(document, "Heading 6", 6);
 		addCustomHeadingStyle(document, "Heading 7", 7);
-		
-		//XWPFHeader head = document.createHeader(HeaderFooterType.DEFAULT);
-        //head.createParagraph().createRun().setText("header");
 
-        //XWPFFooter foot = document.createFooter(HeaderFooterType.DEFAULT);
-        //foot.createParagraph().createRun().setText("footer");
+		// XWPFHeader head = document.createHeader(HeaderFooterType.DEFAULT);
+		// head.createParagraph().createRun().setText("header");
+
+		// XWPFFooter foot = document.createFooter(HeaderFooterType.DEFAULT);
+		// foot.createParagraph().createRun().setText("footer");
 
 		createPageSettings(document);
 		createMetaData(document);
+		createCoverPageFront(document);
 		createTitlePage(document);
 		createBookDetailsPage(document);
 		createPDFIssuePage(document);
@@ -88,6 +89,28 @@ public class WordDocument {
 
 		System.out.println("Word Document of the Bible Book Introduction Creation completed");
 
+	}
+
+	private static void createCoverPageFront(XWPFDocument document) {
+		if ("yes".equalsIgnoreCase(
+				BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_INCLUDE_COVER_PAGE_SECTIONS))) {
+			System.out.println("Cover Page Front Page Creation started");
+			XWPFParagraph paragraph = null;
+			XWPFRun run = null;
+
+			// title
+			paragraph = document.createParagraph();
+			paragraph.setAlignment(ParagraphAlignment.CENTER);
+			run = paragraph.createRun();
+			run.setFontFamily(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_TITLE_FONT));
+			run.setFontSize(getFontSize(Constants.STR_TITLE_FONT_SIZE));
+			run.setText("Space for Cover Page");
+			run.addBreak();
+			run.addBreak();
+
+			addSectionBreak(document, NO_OF_COLUMNS_IN_CONTENT_PAGES);
+			System.out.println("Cover Page Front Page Creation completed");
+		}
 	}
 
 	private static void addCustomHeadingStyle(XWPFDocument docxDocument, String strStyleId, int headingLevel) {
@@ -157,7 +180,7 @@ public class WordDocument {
 			run.setFontSize(getFontSize(Constants.STR_CONTENT_FONT_SIZE) + 6);
 			run.setBold(true);
 			run.setText(month.replaceAll("-", " ").replaceAll("_", " ").replaceAll("  ", " "));
-			
+
 			paragraph = document.createParagraph();
 			paragraph.setAlignment(ParagraphAlignment.LEFT);
 			createIndexByDays(paragraph, file);
@@ -179,7 +202,7 @@ public class WordDocument {
 		BufferedReader reader = null;
 		String removeTextRegEx = BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_REMOVE_TEXT_REG_EX);
 		Pattern pattern = null;
-		if(removeTextRegEx!=null) {
+		if (removeTextRegEx != null) {
 			pattern = Pattern.compile(removeTextRegEx);
 		}
 		for (int i = 0; i < files.length; i++) {
@@ -194,33 +217,33 @@ public class WordDocument {
 				reader = new BufferedReader(isr);
 				String line = reader.readLine();
 				boolean header1Found = false;
-				
-				
+
 				while (line != null) {
 
 					line = line.strip();
 					if (!line.equals("")) {
-						
-						if(removeTextRegEx!=null && !removeTextRegEx.isBlank() && pattern.matcher(line).find()) {
+
+						if (removeTextRegEx != null && !removeTextRegEx.isBlank() && pattern.matcher(line).find()) {
 							System.out.println(line);
 							System.out.println("Date " + line + " found in the file: " + day.getAbsolutePath());
 							line = line.replaceAll("[0-9]+\\.[0-9]+\\.[0-9]+", "");
 							System.out.println(line);
 						}
-						
+
 						if (line.contains("[H1]")) {
-							if(header1Found) {
-								System.out.println("Duplicate H1 " + line + " found in the same file: " + day.getAbsolutePath());
-							}else {
+							if (header1Found) {
+								System.out.println(
+										"Duplicate H1 " + line + " found in the same file: " + day.getAbsolutePath());
+							} else {
 								header1Found = true;
 							}
 							line = buildH1Description(document, line, paragraph, i);
 							String temp = line.stripIndent().strip();
-							if(daysMap.containsKey(temp)) {
+							if (daysMap.containsKey(temp)) {
 								System.out.println("Duplicate title found: " + line);
 								System.out.println("\tOriginal file: " + daysMap.get(temp).getAbsolutePath());
 								System.out.println("\tDuplicate file: " + day.getAbsolutePath());
-							}else {
+							} else {
 								daysMap.put(temp, day);
 							}
 							// Create bookmark for the day
@@ -268,7 +291,7 @@ public class WordDocument {
 		run.setFontFamily(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_CONTENT_FONT));
 		run.setFontSize(getFontSize(Constants.STR_CONTENT_FONT_SIZE));
 		run.setText("\t");
-		
+
 		run = paragraph.createRun();
 		run.setFontFamily(BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_CONTENT_FONT));
 		run.setFontSize(getFontSize(Constants.STR_CONTENT_FONT_SIZE));
@@ -315,7 +338,8 @@ public class WordDocument {
 		run.setText(line);
 	}
 
-	private static String buildH1Description(XWPFDocument document, String line, XWPFParagraph paragraph, int dayOfTheMonth) {
+	private static String buildH1Description(XWPFDocument document, String line, XWPFParagraph paragraph,
+			int dayOfTheMonth) {
 		// Remove prefix text like 0001 used for identifying unique no of words
 		try {
 			line = line.replace(line.substring(0, line.indexOf("[H1]")), "");
@@ -378,7 +402,7 @@ public class WordDocument {
 
 		setPageSize(ctSectPr);
 		setPageMargin(ctSectPr);
-		
+
 		System.out.println("Page Setting completed");
 	}
 
@@ -612,7 +636,7 @@ public class WordDocument {
 
 		paragraph = document.createParagraph();
 		run = paragraph.createRun();
-		
+
 		addSectionBreak(document, NO_OF_COLUMNS_IN_CONTENT_PAGES);
 
 		System.out.println("Index Creation Completed...");
@@ -690,11 +714,11 @@ public class WordDocument {
 	private static CTSectPr addSectionBreak(XWPFDocument document, int noOfColumns) {
 		XWPFParagraph paragraph = document.createParagraph();
 		paragraph = document.createParagraph();
-		
+
 		CTSectPr ctSectPr = paragraph.getCTP().addNewPPr().addNewSectPr();
 		setPageSize(ctSectPr);
 		setPageMargin(ctSectPr);
-		
+
 		CTColumns ctColumns = ctSectPr.addNewCols();
 		ctColumns.setNum(BigInteger.valueOf(noOfColumns));
 		return ctSectPr;

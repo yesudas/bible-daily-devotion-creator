@@ -7,6 +7,7 @@ package in.wordofgod.bible.daily.devotion.creator;
  * 
  */
 public class Constants {
+	
 	//ZefaniaXML
 	public static final String STR_LANGUAGE = "language";
 	public static final String STR_IDENTIFIER = "identifier";
@@ -18,6 +19,8 @@ public class Constants {
 	public static final String STR_SUBJECT = "subject";
 	
 	//Word Document
+	public static final String STR_INCLUDE_COVER_PAGE_SECTIONS = "includeCoverPageSections";
+
 	public static final String STR_SUB_TITLE = "subTitle";
 	public static final String STR_TITLE_FONT = "titleFont";
 	public static final String STR_TITLE_FONT_SIZE = "titleFontSize";
