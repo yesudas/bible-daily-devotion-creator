@@ -23,7 +23,6 @@ public class BibleDailyDevotionCreator {
 	public static final String INFORMATION_FILE_NAME = "INFORMATION.txt";
 	public static boolean formatXML = true;
 	public static String sourceDirectory;
-	public static String outputFile;
 	public static Properties BOOK_DETAILS = null;
 
 	/**
@@ -34,7 +33,6 @@ public class BibleDailyDevotionCreator {
 		if (!validateInput(args)) {
 			return;
 		}
-		;
 
 		loadBookDetails();
 		if ("yes".equalsIgnoreCase(BOOK_DETAILS.getProperty("createWordDocument"))) {
@@ -61,13 +59,7 @@ public class BibleDailyDevotionCreator {
 				printHelpMessage();
 				return false;
 			}
-
-			if (sourceDirectory.contains("\\")) {
-				outputFile = sourceDirectory.substring(sourceDirectory.lastIndexOf("\\"), sourceDirectory.length());
-			} else {
-				outputFile = sourceDirectory.substring(0, sourceDirectory.length());
-			}
-		}
+		}		
 		return true;
 	}
 

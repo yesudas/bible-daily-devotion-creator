@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 import org.apache.poi.ooxml.POIXMLProperties.CoreProperties;
 import org.apache.poi.xwpf.usermodel.BreakType;
@@ -44,6 +47,8 @@ public class WordDocument {
 	public static final String EXTENSION = ".docx";
 
 	private static int uniqueBookMarkCounter = 1;
+	
+	private static Map<String, File> daysMap = new TreeMap<String, File>();
 
 	public static void build() {
 		System.out.println("Word Document of the Bible Book Introduction Creation started");
@@ -72,7 +77,7 @@ public class WordDocument {
 		createContent(document);
 
 		// Write to file
-		File file = new File(BibleDailyDevotionCreator.outputFile + EXTENSION);
+		File file = new File(BibleDailyDevotionCreator.sourceDirectory + EXTENSION);
 		try {
 			FileOutputStream out = new FileOutputStream(file);
 			document.write(out);
@@ -172,6 +177,11 @@ public class WordDocument {
 	private static void createContentUnderMonth(XWPFDocument document, File month) {
 		File[] files = month.listFiles();
 		BufferedReader reader = null;
+		String removeTextRegEx = BibleDailyDevotionCreator.BOOK_DETAILS.getProperty(Constants.STR_REMOVE_TEXT_REG_EX);
+		Pattern pattern = null;
+		if(removeTextRegEx!=null) {
+			pattern = Pattern.compile(removeTextRegEx);
+		}
 		for (int i = 0; i < files.length; i++) {
 			File day = files[i];
 
@@ -183,13 +193,36 @@ public class WordDocument {
 				InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
 				reader = new BufferedReader(isr);
 				String line = reader.readLine();
-
+				boolean header1Found = false;
+				
+				
 				while (line != null) {
 
 					line = line.strip();
 					if (!line.equals("")) {
+						
+						if(removeTextRegEx!=null && !removeTextRegEx.isBlank() && pattern.matcher(line).find()) {
+							System.out.println(line);
+							System.out.println("Date " + line + " found in the file: " + day.getAbsolutePath());
+							line = line.replaceAll("[0-9]+\\.[0-9]+\\.[0-9]+", "");
+							System.out.println(line);
+						}
+						
 						if (line.contains("[H1]")) {
+							if(header1Found) {
+								System.out.println("Duplicate H1 " + line + " found in the same file: " + day.getAbsolutePath());
+							}else {
+								header1Found = true;
+							}
 							line = buildH1Description(document, line, paragraph, i);
+							String temp = line.stripIndent().strip();
+							if(daysMap.containsKey(temp)) {
+								System.out.println("Duplicate title found: " + line);
+								System.out.println("\tOriginal file: " + daysMap.get(temp).getAbsolutePath());
+								System.out.println("\tDuplicate file: " + day.getAbsolutePath());
+							}else {
+								daysMap.put(temp, day);
+							}
 							// Create bookmark for the day
 							CTBookmark bookmark = paragraph.getCTP().addNewBookmarkStart();
 							bookmark.setName(getFormattedBookmarkName(line));

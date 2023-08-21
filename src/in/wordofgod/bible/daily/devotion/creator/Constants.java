@@ -18,7 +18,7 @@ public class Constants {
 	public static final String STR_SUBJECT = "subject";
 	
 	//Word Document
-	public static final String STR_SUB_TITLE = "title";
+	public static final String STR_SUB_TITLE = "subTitle";
 	public static final String STR_TITLE_FONT = "titleFont";
 	public static final String STR_TITLE_FONT_SIZE = "titleFontSize";
 	public static final String STR_SUB_TITLE_FONT = "subTitleFont";
@@ -41,6 +41,8 @@ public class Constants {
 	public static final String STR_MARGIN_BOTTOM = "marginBottom";
 	public static final String STR_MARGIN_LEFT = "marginLeft";
 	public static final String STR_MARGIN_RIGHT = "marginRight";
+	
+	public static final String STR_REMOVE_TEXT_REG_EX = "removeTextRegEx";
 	
 
 	public static final int PAGE_Letter_W = 612;

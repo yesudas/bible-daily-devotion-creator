@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project wog-bible-daily-devotion-creator">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <!--define folder properties-->
+    <property name="dir.buildfile" value="."/>
+    <property name="dir.workspace" value="D:/Softwares/eclipse-workspace4"/>
+    <property name="dir.jarfile" value="${dir.buildfile}"/>
+    <target name="create_run_jar">
+        <jar destfile="${dir.jarfile}/bible-daily-devotion-creator.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="in.wordofgod.bible.daily.devotion.creator.BibleDailyDevotionCreator"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="${dir.jarfile}/bin"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/poi-5.1.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/poi-examples-5.1.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/poi-excelant-5.1.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/poi-javadoc-5.1.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/poi-ooxml-5.1.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/poi-ooxml-full-5.1.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/poi-ooxml-lite-5.1.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/poi-scratchpad-5.1.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/ooxml-lib/commons-compress-1.21.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/ooxml-lib/commons-logging-1.2.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/ooxml-lib/curvesapi-1.06.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/ooxml-lib/slf4j-api-1.7.32.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/ooxml-lib/xmlbeans-5.0.2.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/lib/commons-codec-1.15.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/lib/commons-collections4-4.4.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/lib/commons-io-2.11.0.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/lib/commons-math3-3.6.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/lib/log4j-api-2.14.1.jar"/>
+            <zipfileset excludes="META-INF/*.SF" src="${dir.jarfile}/libs/poi-5.1/lib/SparseBitSet-1.2.jar"/>
+        </jar>
+    </target>
+</project>
